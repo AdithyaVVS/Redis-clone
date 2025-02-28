@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redis Clone Dashboard</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Redis Clone Dashboard</h1>
+
+    <label for="apiKey">Enter API Key:</label>
+    <input type="text" id="apiKey" placeholder="Paste your API Key here">
+    
+    <h2>Store a Key</h2>
+    <input type="text" id="setKey" placeholder="Enter key">
+    <input type="text" id="setValue" placeholder="Enter value">
+    <button onclick="setKey()">Set Key</button>
+
+    <h2>Retrieve a Key</h2>
+    <input type="text" id="getKey" placeholder="Enter key">
+    <button onclick="getKey()">Get Key</button>
+    <p id="getResult"></p>
+
+    <h2>List All Keys</h2>
+    <input type="text" id="searchKey" placeholder="Search key">
+    <button onclick="listKeys()">List Keys</button>
+    <ul id="keysList"></ul>
+
+    <h2>Delete a Key</h2>
+    <input type="text" id="deleteKey" placeholder="Enter key">
+    <button onclick="deleteKey()">Delete Key</button>
+
+    <h2>Set TTL for a Key</h2>
+    <input type="text" id="ttlKey" placeholder="Enter key">
+    <input type="number" id="ttlValue" placeholder="TTL (seconds)">
+    <button onclick="setTTL()">Set TTL</button>
+
+    <h2>Check TTL</h2>
+    <input type="text" id="checkTTLKey" placeholder="Enter key">
+    <button onclick="getTTL()">Check TTL</button>
+    <p id="ttlResult"></p>
+
+    <h2>Queue Management</h2>
+    <input type="text" id="queueName" placeholder="Queue name">
+    <input type="text" id="queueValue" placeholder="Item to enqueue">
+    <button onclick="enqueue()">Enqueue</button>
+    <button onclick="dequeue()">Dequeue</button>
+    <p id="queueResult"></p>
+
+    <script src="script.js"></script>
+</body>
+</html>

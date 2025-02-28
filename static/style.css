@@ -1,0 +1,174 @@
+/* Global Styles */
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #0D0D0D;
+    color: #EAEAEA;
+    text-align: center;
+    margin: 0;
+    padding: 0;
+}
+
+/* Dashboard Container */
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 40px 20px;
+}
+
+/* Dashboard Title */
+h1 {
+    font-size: 28px;
+    font-weight: 600;
+    color: #ff3e3e;
+    text-shadow: 0 0 10px rgba(255, 62, 62, 0.8);
+    margin-bottom: 20px;
+    transition: 0.3s ease-in-out;
+    animation: fadeIn 1s ease-in-out;
+}
+
+h1:hover {
+    transform: scale(1.05);
+}
+
+/* API Key Input */
+input[type="text"], input[type="password"] {
+    width: 80%;
+    max-width: 400px;
+    padding: 12px;
+    margin: 10px 0;
+    border: 1px solid #ff3e3e;
+    border-radius: 8px;
+    background-color: rgba(20, 20, 20, 0.85);
+    color: #EAEAEA;
+    font-size: 16px;
+    transition: all 0.3s ease-in-out;
+    backdrop-filter: blur(8px);
+}
+
+input[type="text"]:focus, input[type="password"]:focus {
+    outline: none;
+    border-color: #ff6666;
+    box-shadow: 0 0 12px rgba(255, 62, 62, 0.6);
+    transform: scale(1.02);
+}
+
+/* Buttons */
+button {
+    background: linear-gradient(90deg, #ff3e3e, #ff7e7e);
+    border: none;
+    color: white;
+    padding: 14px 20px;
+    margin: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease-in-out;
+    width: 60%;
+    max-width: 250px;
+    box-shadow: 0 4px 10px rgba(255, 62, 62, 0.4);
+    position: relative;
+    overflow: hidden;
+}
+
+button:hover {
+    transform: translateY(-3px) scale(1.02);
+    background: linear-gradient(90deg, #ff1e1e, #ff6666);
+    box-shadow: 0 6px 14px rgba(255, 62, 62, 0.6);
+}
+
+/* Button Click Ripple Effect */
+button::after {
+    content: "";
+    position: absolute;
+    width: 200%;
+    height: 200%;
+    background: rgba(255, 255, 255, 0.2);
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 50%;
+    opacity: 0;
+    transition: 0.5s;
+}
+
+button:active::after {
+    width: 0;
+    height: 0;
+    opacity: 1;
+}
+
+/* Sections */
+.section {
+    padding: 20px;
+    margin: 20px auto;
+    width: 80%;
+    max-width: 600px;
+    background: rgba(20, 20, 20, 0.85);
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(255, 62, 62, 0.2);
+    backdrop-filter: blur(10px);
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+}
+
+.section:hover {
+    transform: scale(1.02);
+    box-shadow: 0 6px 18px rgba(255, 62, 62, 0.4);
+}
+
+/* Labels & Section Titles */
+.section h2 {
+    font-size: 20px;
+    color: #ff7e7e;
+    margin-bottom: 12px;
+    transition: 0.3s;
+}
+
+.section h2:hover {
+    transform: scale(1.05);
+    color: #ffaaaa;
+}
+
+/* Divider */
+hr {
+    border: none;
+    height: 2px;
+    background: linear-gradient(90deg, transparent, #ff3e3e, transparent);
+    width: 60%;
+    margin: 20px auto;
+    opacity: 0.7;
+}
+
+/* Loader Animation */
+.loader {
+    width: 50px;
+    height: 50px;
+    border: 5px solid rgba(255, 62, 62, 0.2);
+    border-top: 5px solid #ff3e3e;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin: 20px auto;
+    display: none;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes fadeIn {
+    0% { opacity: 0; transform: translateY(-10px); }
+    100% { opacity: 1; transform: translateY(0); }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    input[type="text"], input[type="password"] {
+        width: 90%;
+    }
+    button {
+        width: 80%;
+    }
+}
