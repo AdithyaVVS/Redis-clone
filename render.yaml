@@ -18,10 +18,7 @@ services:
           name: redis-clone-db
           property: port
       - key: REDIS_PASSWORD
-        fromService:
-          type: redis
-          name: redis-clone-db
-          property: password
+        generateValue: true
 
   # Redis Database
   - type: redis
