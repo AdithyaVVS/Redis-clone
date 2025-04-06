@@ -3,6 +3,7 @@ import redis
 import json
 import time
 import logging
+import os
 from config import redis_client
 from auth import validate_api_key, generate_api_key, get_api_role, log_api_request
 from health import health_bp
@@ -23,6 +24,9 @@ def redis_operation(operation_func):
         return operation_func()
     except redis.exceptions.ConnectionError as e:
         logger.error(f"Redis connection error: {str(e)}")
+        # Check if we're in Railway environment for better error messages
+        if os.environ.get('RAILWAY_ENVIRONMENT'):
+            logger.error("Railway deployment detected. Ensure Redis plugin is properly configured.")
         return {"error": "Database connection error. Please try again later."}, 503
     except redis.exceptions.RedisError as e:
         logger.error(f"Redis error: {str(e)}")
