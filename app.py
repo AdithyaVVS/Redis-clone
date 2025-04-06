@@ -2,10 +2,34 @@ from flask import Flask, request, jsonify, send_from_directory
 import redis
 import json
 import time
+import logging
 from config import redis_client
 from auth import validate_api_key, generate_api_key, get_api_role, log_api_request
+from health import health_bp
+
+# Set up logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__, static_url_path='', static_folder='static')
+
+# Register blueprints
+app.register_blueprint(health_bp)
+
+# Redis operation wrapper for error handling
+def redis_operation(operation_func):
+    """Wrapper to handle Redis operations with error handling"""
+    try:
+        return operation_func()
+    except redis.exceptions.ConnectionError as e:
+        logger.error(f"Redis connection error: {str(e)}")
+        return {"error": "Database connection error. Please try again later."}, 503
+    except redis.exceptions.RedisError as e:
+        logger.error(f"Redis error: {str(e)}")
+        return {"error": "Database operation failed. Please try again later."}, 500
+    except Exception as e:
+        logger.error(f"Unexpected error: {str(e)}")
+        return {"error": "An unexpected error occurred. Please try again later."}, 500
 
 # 🔹 Middleware: Require API Key for Protected Routes
 @app.before_request
@@ -36,8 +60,11 @@ def generate_key():
     if not user_id or role not in ["admin", "user"]:
         return jsonify({"error": "User ID is required and role must be 'admin' or 'user'"}), 400
 
-    api_key = generate_api_key(user_id, role)
-    return jsonify({"api_key": api_key, "role": role}), 200
+    def operation():
+        api_key = generate_api_key(user_id, role)
+        return jsonify({"api_key": api_key, "role": role}), 200
+        
+    return redis_operation(operation)
 
 # ===================== API LOGGING & ADMIN FEATURES =====================
 
