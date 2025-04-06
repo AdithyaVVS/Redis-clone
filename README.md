@@ -111,15 +111,15 @@ Invoke-RestMethod -Uri "http://127.0.0.1:5000/hset" -Method POST -Body $body -Co
 
 ## 🌐 Deployment
 
-### Deploy on Render
+### Deploy on Railway (Free Tier)
 
-1. Create a Render Web Service
-2. Connect your GitHub repository
-3. Add Redis instance
-4. Set start command:
-   ```bash
-   gunicorn -w 4 -b 0.0.0.0:5000 app:app
-   ```
+1. Sign up for [Railway](https://railway.app) with GitHub
+2. Create a new project and select "Deploy from GitHub repo"
+3. Connect your GitHub repository
+4. Add Redis plugin from the Railway dashboard
+5. Railway will automatically deploy your application
+
+For detailed instructions, see [RAILWAY_DEPLOYMENT.md](RAILWAY_DEPLOYMENT.md)
 
 ## 📝 License
 
