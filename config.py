@@ -13,7 +13,15 @@ logger = logging.getLogger(__name__)
 
 # Railway provides Redis URL in different formats depending on the plugin
 # Try all possible environment variable names
-redis_url = os.environ.get('REDIS_URL') or os.environ.get('REDISHOST') or os.environ.get('REDIS_URI')
+redis_url = os.environ.get('REDIS_URL') or os.environ.get('REDISHOST') or os.environ.get('REDIS_URI') or os.environ.get('DATABASE_URL')
+
+# For Railway deployment, check if we're in Railway environment
+if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RAILWAY_SERVICE_ID'):
+    logger.info("Railway environment detected, prioritizing Railway Redis configuration")
+    # Railway may provide Redis URL in DATABASE_URL for Redis plugin
+    if not redis_url and os.environ.get('DATABASE_URL'):
+        redis_url = os.environ.get('DATABASE_URL')
+        logger.info("Using DATABASE_URL for Redis connection")
 
 if redis_url:
     # Parse the Redis URL provided by Railway
@@ -26,6 +34,21 @@ if redis_url:
         redis_host = parsed_url.hostname
         redis_port = parsed_url.port or 6379
         redis_password = parsed_url.password
+        
+        # Additional validation for Railway deployment
+        if not redis_host and os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RAILWAY_SERVICE_ID'):
+            # Try to extract host:port format if URL parsing failed
+            if ':' in redis_url:
+                parts = redis_url.split(':')
+                if len(parts) >= 2:
+                    potential_host = parts[0]
+                    potential_port = parts[1]
+                    # Remove any non-numeric characters from port
+                    potential_port = ''.join(c for c in potential_port if c.isdigit())
+                    if potential_host and potential_port:
+                        redis_host = potential_host
+                        redis_port = int(potential_port)
+                        logger.info(f"Extracted Redis host:port from URL: {redis_host}:{redis_port}")
     except Exception as e:
         logger.error(f"Failed to parse Redis URL: {str(e)}")
         # Fallback to default values
@@ -43,14 +66,19 @@ else:
 # Function to create Redis client with retry logic
 def create_redis_client(max_retries=5, retry_delay=2):
     # For Railway deployment, we might need more retries as services start up
-    if os.environ.get('RAILWAY_ENVIRONMENT'):
-        max_retries = 10  # Increase retries for Railway environment
-        retry_delay = 3   # Longer delay between retries
+    if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RAILWAY_SERVICE_ID'):
+        max_retries = 20  # Increase retries for Railway environment
+        retry_delay = 5   # Longer delay between retries for Railway
     
     for attempt in range(max_retries):
         try:
             # If we have a full Redis URL, use it directly
             if redis_url:
+                # Ensure URL has proper protocol prefix
+                if not redis_url.startswith('redis://') and not redis_url.startswith('rediss://'):
+                    redis_url = 'redis://' + redis_url
+                    logger.info("Added redis:// protocol prefix to Redis URL")
+                
                 client = redis.from_url(
                     redis_url,
                     decode_responses=True,
@@ -88,10 +116,18 @@ def create_redis_client(max_retries=5, retry_delay=2):
             else:
                 logger.error("Failed to connect to Redis after multiple attempts")
                 # For Railway deployment, log additional information to help troubleshoot
-                if os.environ.get('RAILWAY_ENVIRONMENT'):
+                if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RAILWAY_SERVICE_ID'):
                     logger.error(f"Railway deployment detected. Check if Redis plugin is properly configured.")
                     logger.error(f"Redis connection parameters: host={redis_host}, port={redis_port}")
-                    logger.error(f"Environment variables: REDIS_URL={os.environ.get('REDIS_URL', 'Not set')}")
+                    # Log all environment variables that might contain Redis connection info
+                    logger.error(f"Environment variables:")
+                    logger.error(f"  REDIS_URL={os.environ.get('REDIS_URL', 'Not set')}")
+                    logger.error(f"  DATABASE_URL={os.environ.get('DATABASE_URL', 'Not set')}")
+                    logger.error(f"  REDISHOST={os.environ.get('REDISHOST', 'Not set')}")
+                    logger.error(f"  REDIS_URI={os.environ.get('REDIS_URI', 'Not set')}")
+                    logger.error(f"  REDIS_HOST={os.environ.get('REDIS_HOST', 'Not set')}")
+                    logger.error(f"  REDIS_PORT={os.environ.get('REDIS_PORT', 'Not set')}")
+                    logger.error(f"  REDIS_PASSWORD={os.environ.get('REDIS_PASSWORD', 'Not set') != 'Not set' and '***' or 'Not set'}")
                 
                 # Return a client anyway, so the application can start and retry later
                 # This allows the app to start and serve at least the health endpoint

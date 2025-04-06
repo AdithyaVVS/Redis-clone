@@ -18,22 +18,33 @@ app = Flask(__name__, static_url_path='', static_folder='static')
 app.register_blueprint(health_bp)
 
 # Redis operation wrapper for error handling
-def redis_operation(operation_func):
-    """Wrapper to handle Redis operations with error handling"""
-    try:
-        return operation_func()
-    except redis.exceptions.ConnectionError as e:
-        logger.error(f"Redis connection error: {str(e)}")
-        # Check if we're in Railway environment for better error messages
-        if os.environ.get('RAILWAY_ENVIRONMENT'):
-            logger.error("Railway deployment detected. Ensure Redis plugin is properly configured.")
-        return {"error": "Database connection error. Please try again later."}, 503
-    except redis.exceptions.RedisError as e:
-        logger.error(f"Redis error: {str(e)}")
-        return {"error": "Database operation failed. Please try again later."}, 500
-    except Exception as e:
-        logger.error(f"Unexpected error: {str(e)}")
-        return {"error": "An unexpected error occurred. Please try again later."}, 500
+def redis_operation(operation_func, max_retries=3, retry_delay=1):
+    """Wrapper to handle Redis operations with error handling and retry logic"""
+    # For Railway deployment, we might need more retries
+    if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RAILWAY_SERVICE_ID'):
+        max_retries = 5  # More retries for Railway environment
+        retry_delay = 2  # Longer delay between retries
+    
+    for attempt in range(max_retries):
+        try:
+            return operation_func()
+        except redis.exceptions.ConnectionError as e:
+            logger.error(f"Redis connection error (attempt {attempt+1}/{max_retries}): {str(e)}")
+            # Check if we're in Railway environment for better error messages
+            if os.environ.get('RAILWAY_ENVIRONMENT') or os.environ.get('RAILWAY_SERVICE_ID'):
+                logger.error("Railway deployment detected. Ensure Redis plugin is properly configured.")
+            
+            if attempt < max_retries - 1:
+                logger.info(f"Retrying operation in {retry_delay} seconds...")
+                time.sleep(retry_delay)
+            else:
+                return {"error": "Database connection error. Please try again later."}, 503
+        except redis.exceptions.RedisError as e:
+            logger.error(f"Redis error: {str(e)}")
+            return {"error": "Database operation failed. Please try again later."}, 500
+        except Exception as e:
+            logger.error(f"Unexpected error: {str(e)}")
+            return {"error": "An unexpected error occurred. Please try again later."}, 500
 
 # 🔹 Middleware: Require API Key for Protected Routes
 @app.before_request
